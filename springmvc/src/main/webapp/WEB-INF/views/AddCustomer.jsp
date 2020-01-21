@@ -3,7 +3,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-
 	pageEncoding="UTF-8"%>
 
 <!DOCTYPE html>
@@ -13,13 +12,9 @@
 <head>
 
 <style>
-
 .error {
-
 	color: red
-
 }
-
 </style>
 
 <meta charset="UTF-8">
@@ -27,14 +22,12 @@
 <title>Save Customer</title>
 
 <link type="text/css" rel="stylesheet"
-
 	href="${pageContext.request.contextPath}/resource/css/style.css">
 
 <link type="text/css" rel="stylesheet"
-
 	href="${pageContext.request.contextPath}/resource/css/add-customer-style.css">
 
-	
+
 
 
 </head>
@@ -58,7 +51,6 @@
 
 
 		<form:form id="form" action="savecustomer" modelAttribute="Customers"
-
 			method="post">
 
 
@@ -139,5 +131,20 @@
 </body>
 <script>
 
+$('update').click(function(e){
+	$form=$("#form");
+	var formdata=$("#form").serialize();
+	if($form.valid()){
+		$.post('update',formdata,fucntion(data)){
+			$('#ajaxload').html(data);
+			$('#ajaxload.contain-fluid').addclass('fade-in');
+		}).fail function(){
+	$('#ajaxload').html(data);
+	$('#ajaxload.contain-fluid').addclass('fade-out');
+	
+});
+		
+		
+});
 </script>
 </html>

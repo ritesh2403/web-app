@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,14 +35,24 @@ public class CustomerController {
 
 	}
 
-	@RequestMapping(value="/update",method=RequestMethod.GET)
+	@RequestMapping(value = "/update", method = RequestMethod.GET)
 	public ModelAndView updateCustomer(@RequestParam("customerId") int id) {
 		ModelAndView mv = new ModelAndView();
-		Customer c=new Customer();
-		Customer customer=service.getCustomer(id);
+		Customer c = new Customer();
+		Customer customer = service.getCustomer(id);
 		mv.addObject("Customers", customer);
 		mv.setViewName("AddCustomer");
 		return mv;
 
 	}
+
+	@RequestMapping(value = "/creditcard", method = RequestMethod.POST)
+	public ModelAndView updateCustomer(@RequestBody Customer customer) {
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("Customers", customer);
+		mv.setViewName("edit");
+		return mv;
+
+	}
+
 }

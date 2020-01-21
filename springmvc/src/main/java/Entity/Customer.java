@@ -9,7 +9,7 @@ public class Customer {
 	private String lastName;
 	private String email;
 	private List<Customer> customers;
-
+    private int credit;
 	public Customer() {
 
 	}
@@ -61,6 +61,14 @@ public class Customer {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public int getCredit() {
+		return credit;
+	}
+
+	public void setCredit(int credit) {
+		this.credit = credit;
 	}
 
 }

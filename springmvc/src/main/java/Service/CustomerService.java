@@ -14,5 +14,5 @@ interface CustomerService {
 	
 	public void deleteCusomer(int id);
 	
-
+	public void loadData();
 }

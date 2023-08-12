@@ -52,8 +52,7 @@
 
 		<form:form id="form" action="savecustomer" modelAttribute="Customers"
 			method="post">
-
-
+<form:input path="id"  type="hidden"></form:input>
 			<table>
 
 				<tr>

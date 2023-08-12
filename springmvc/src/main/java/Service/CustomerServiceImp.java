@@ -23,7 +23,7 @@ public class CustomerServiceImp implements CustomerService {
 	@Override
 	public void save(Customer cust) {
 		// TODO Auto-generated method stub
-
+		dao.save(cust);
 	}
 
 	@Override
@@ -35,7 +35,17 @@ public class CustomerServiceImp implements CustomerService {
 	@Override
 	public void deleteCusomer(int id) {
 		// TODO Auto-generated method stub
+       dao.deleteCusomer(id);
+	}
 
+	public void savecustomer(Customer customer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void loadData() {
+		// TODO Auto-generated method stub
+		dao.loadData();
 	}
 
 }

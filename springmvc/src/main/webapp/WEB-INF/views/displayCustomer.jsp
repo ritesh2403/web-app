@@ -18,10 +18,15 @@
 				<th>Action</th>
 			</tr>
 
-
+<c:url var="loadLink" value="/customer/loadData">
+			</c:url>
 			<c:forEach var="tempCustomers" items="${customers}">
+			
 				<c:url var="updateLink" value="/customer/update">
 				<c:param name="customerId" value="${tempCustomers.id}"></c:param>
+				</c:url>
+				<c:url var="deleteLink" value="/customer/delete">
+				<c:param name="customerdelId" value="${tempCustomers.id}"></c:param>
 				</c:url>
 				<tr>
 					<td>${tempCustomers.firstName}</td>
@@ -36,8 +41,11 @@
 
 
 			</c:forEach>
-
+			
+			
+			
 		</table>
+		<a href="${loadLink}">Load Data</a>
 	</form>
 </body>
 </html>

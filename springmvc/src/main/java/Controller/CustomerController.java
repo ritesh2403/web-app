@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -41,10 +42,57 @@ public class CustomerController {
 		Customer c = new Customer();
 		Customer customer = service.getCustomer(id);
 		mv.addObject("Customers", customer);
+		mv.addObject("customerid", id);
 		mv.setViewName("AddCustomer");
 		return mv;
 
 	}
+	
+	@RequestMapping(value = "/savecustomer", method = RequestMethod.POST)
+	public ModelAndView savecustomer(@ModelAttribute Customer customer) {
+		ModelAndView mv = new ModelAndView();
+		Customer c = new Customer();
+		 service.save(customer);
+		 List<Customer> customersave = service.customers();
+		 System.out.println("save customer"+customersave);
+		mv.addObject("customers", customersave);
+		mv.setViewName("displayCustomer");
+		return mv;
+
+	}
+	
+	
+	@RequestMapping(value = "/delete", method = RequestMethod.GET)
+	public ModelAndView deleteCustomer(@RequestParam("customerdelId") int id) {
+	
+		ModelAndView mv = new ModelAndView();
+		Customer c = new Customer();
+	
+		service.deleteCusomer(id);
+		 List<Customer> customersave = service.customers();
+		 System.out.println("save customer"+customersave);
+		mv.addObject("customers", customersave);
+		mv.setViewName("displayCustomer");
+		return mv;
+	}
+	
+	
+	@RequestMapping(value = "/loadData", method = RequestMethod.GET)
+	public ModelAndView loadData() {
+	
+		ModelAndView mv = new ModelAndView();
+		Customer c = new Customer();
+	
+		service.loadData();
+		 List<Customer> customersave = service.customers();
+		 System.out.println("save customer"+customersave);
+		mv.addObject("customers", customersave);
+		mv.setViewName("displayCustomer");
+		return mv;
+	}
+	
+	
+	
 
 	@RequestMapping(value = "/creditcard", method = RequestMethod.POST)
 	public ModelAndView updateCustomer(@RequestBody Customer customer) {

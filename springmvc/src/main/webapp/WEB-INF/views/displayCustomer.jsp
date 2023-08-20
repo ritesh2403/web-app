@@ -8,7 +8,7 @@
 <title>Customer List By ritesh ghorui</title>
 </head>
 <body>
-<p>welcome to portal by devilicious-gojo</p>
+<p>welcome to portal by devilicious-gumgum</p>
 	<form>
 		<br> <br>
 		<table>

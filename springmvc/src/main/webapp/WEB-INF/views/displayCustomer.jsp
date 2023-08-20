@@ -8,6 +8,7 @@
 <title>Customer List By ritesh</title>
 </head>
 <body>
+<p>welcome to portal</p>
 	<form>
 		<br> <br>
 		<table>

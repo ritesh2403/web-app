@@ -1,0 +1,82 @@
+---
+- name: Load Docker Image and Push to Docker Hub
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_job_name: "{{ lookup('env', 'ansible_job_name') }}"
+    ansible_build_id: "{{ lookup('env', 'ansible_build_id') }}"
+
+  tasks:
+    - name: Load Docker image from tarball
+      ansible.builtin.command: docker load -i "dockerImages/ritesh2403_{{ ansible_job_name }}:v1_{{ ansible_build_id }}.tar"
+      become: true
+
+    - name: Load Docker image from tarball
+      ansible.builtin.command: docker load -i "dockerImages/ritesh2403_{{ ansible_job_name }}:latest.tar"
+      become: true
+
+    - name: Docker login
+      ansible.builtin.command: docker login -u ritesh2403 -p Ritesh2403@
+      become: true
+
+    - name: Push Docker image to Docker Hub (v1)
+      ansible.builtin.command: docker push "ritesh2403/{{ ansible_job_name }}:v1_{{ ansible_build_id }}"
+      become: true
+
+    - name: Push Docker latest image to Docker Hub (v1)
+      ansible.builtin.command: docker push "ritesh2403/{{ ansible_job_name }}:latest"
+      become: true
+
+    - name: Delete image tarball (v1)
+      ansible.builtin.file:
+        path: "dockerImages/ritesh2403_{{ ansible_job_name }}:v1_{{ ansible_build_id }}.tar"
+        state: absent
+      become: true
+
+    - name: Delete latest image tarball (v1)
+      ansible.builtin.file:
+        path: "dockerImages/ritesh2403_{{ ansible_job_name }}:latest.tar"
+        state: absent
+      become: true
+
+    - name: Delete Docker Image (by image name and tag)
+      ansible.builtin.command: docker rmi "ritesh2403/{{ ansible_job_name }}:v1_{{ ansible_build_id}}"
+      become: true
+
+    - name: Delete Latest Docker Image (by image name and tag)
+      ansible.builtin.command: docker rmi "ritesh2403/{{ ansible_job_name }}:latest"
+      become: true
+
+    - name: Use Docker Compose to down the Containers
+      delegate_to: 10.2.0.6
+      command: docker-compose -f /home/rootadmin/docker-compose.yml down --rmi all
+      remote_user: rootadmin # Replace with the actual remote user on the Docker host
+      become_method: sudo
+      vars:
+        ansible_ssh_private_key_file: ~/.ssh/id_rsa
+        ansible_become_password: Riteshghorui@
+
+    - name: Use Docker Compose to Start Containers
+      delegate_to: 10.2.0.6
+      command: docker-compose -f /home/rootadmin/docker-compose.yml up -d
+      remote_user: rootadmin # Replace with the actual remote user on the Docker host
+      become_method: sudo
+      vars:
+        ansible_ssh_private_key_file: ~/.ssh/id_rsa
+        ansible_become_password: Riteshghorui@
+
+      # - name: Stop and remove existing container
+      #   delegate_to: 10.2.0.6
+      #   #shell: docker stop spring-container && docker rm spring-container
+      #   ignore_errors: yes # Ignore errors if the container doesn't exist
+      #   become: true
+      #   remote_user: rootadmin  # Replace with the actual remote user on the Docker host
+      #   become_method: sudo
+      #   vars:
+      #     ansible_ssh_private_key_file: ~/.ssh/id_rsa
+      #     ansible_become_password: Riteshghorui@
+      #   shell: docker stop spring-container && docker rm spring-container && docker rmi -f "ritesh2403/{{ ansible_job_name }}:latest"
+
+      # - name: Run Docker Container on Different Host
+      #   delegate_to: 10.2.0.6
+      #   shell: docker container run -itd --name spring-container -p 8082:8080 --pull always  ritesh2403/production_customerportal

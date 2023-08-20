@@ -1,0 +1,167 @@
+pipeline{
+    agent any
+    
+    tools {
+          git 'Default'
+          jdk 'JDK 11'
+          maven 'maven'
+    }
+
+    stages{
+        
+        stage('clone'){
+            steps{
+                git 'https://github.com/ritesh2403/web-app.git'
+            }
+        }
+        
+         stage('Build'){
+            steps{
+               sh '''cd springmvc
+                mvn clean install'''
+            }
+        }
+        
+         stage('copy dockerfile to target location'){
+            steps{
+               sh '''
+               cd springmvc
+               cp Dockerfile target/
+               
+               '''
+            }
+        }
+        
+        stage('build docker image, save as tar and delete it'){
+             environment {
+                  REPOSITORY_NAME = "ritesh2403_production_customerportal"
+                    JOB_NAME_ENV = "${env.JOB_NAME}".replaceAll('/','_').toLowerCase()
+                    BUILD_ID_ENV = "${env.BUILD_ID}"
+                    tarFileName = "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}.tar"
+                    tarvFileName = "ritesh2403_${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}.tar"
+                    tarlFileName = "ritesh2403_${JOB_NAME_ENV}:latest.tar"
+                    }
+            steps{
+                   //  docker image save -o "/opt/dockerImages/${tarFileName} ${JOB_NAME_ENV}_v1.${BUILD_ID_ENV}"
+                    //  docker rmi "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}" 
+                    //docker image save -o "/opt/dockerImages/${tarFileName}" "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}"
+                script{
+                    def jobName=env.JOB_NAME
+                    def jobId=env.JOB_ID
+                     sh '''
+                        cd springmvc
+                        
+                        docker image build -t "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}" .
+                        docker image tag "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}" ritesh2403/"${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}"
+                        docker image tag "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}" ritesh2403/"${JOB_NAME_ENV}:latest"
+                        docker image save -o /opt/dockerImages/"${tarvFileName}" ritesh2403/"${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}"
+                        docker image save -o /opt/dockerImages/"${tarlFileName}" ritesh2403/"${JOB_NAME_ENV}:latest"
+                        docker rmi "${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}"
+                        docker rmi ritesh2403/"${JOB_NAME_ENV}:v1_${BUILD_ID_ENV}"
+                        docker rmi ritesh2403/"${JOB_NAME_ENV}:latest"
+                        '''
+                }
+              
+            }
+        }
+        
+        stage('push docker tar to ansible and delete the tar'){
+            environment{
+                 JOB_NAME="${env.JOB_NAME}".replaceAll('/','_').toLowerCase()
+                 JOB_ID="${env.BUILD_ID}"
+                 fileName="ritesh2403_${JOB_NAME}:v1_${JOB_ID}.tar"
+                 latestfileName="ritesh2403_${JOB_NAME}:latest.tar"
+                 tarverfileName= "ritesh2403_${JOB_NAME}:v1_${JOB_ID}.tar"
+                 tarlatestfileName="ritesh2403_${JOB_NAME}:latest.tar"
+            }
+            steps{
+                script{
+                    sshagent(['AnsibleServerId']){
+                        sh '''
+                                  SRC_DIR=/opt/dockerImages/${fileName}
+                                  nex_DIR=/opt/dockerImages/${latestfileName}
+                                  DEST_USER=rootadmin
+                                  DEST_SERVER=10.2.0.5
+                                  DEST_PATH=/opt/ansible/dockerImages
+                                  rsync -avz $SRC_DIR $DEST_USER@$DEST_SERVER:$DEST_PATH
+                                  rsync -avz $nex_DIR $DEST_USER@$DEST_SERVER:$DEST_PATH
+                                  rm -rf /opt/dockerImages/${tarverfileName}
+                                  rm -rf /opt/dockerImages/${tarlatestfileName}
+                                  
+                                  
+                           '''
+                    }
+                }
+            }
+        }
+        stage('run playbook on ansible server'){
+             environment{
+                
+                            t_ansible_job_name="${env.JOB_NAME}".replaceAll('/','_').toLowerCase()
+                            t_ansible_build_id= "${env.BUILD_ID}"
+                        }
+            steps{
+                 script {
+                   
+                    
+                     
+                        
+                         echo "t_ansible_job_name: ${t_ansible_job_name}"
+                                  echo "t_ansible_build_id: ${t_ansible_build_id}"
+                
+                        sshagent(['AnsibleServerId']){
+                             withEnv(["ansible_job_name=${t_ansible_job_name}", "ansible_build_id=${t_ansible_build_id}"]) {
+                                  echo "ansible_job_name: $ansible_job_name"
+                                  echo "ansible_build_id: $ansible_build_id"
+                                  sh "ssh rootadmin@10.2.0.5 \"cd /opt/ansible/ && ansible-playbook -i inventory.ini docker-playbook.yml  -e ansible_job_name=$ansible_job_name -e ansible_build_id=$ansible_build_id\""
+                             }
+                        }
+                }
+                
+            }
+            
+            
+            
+        }
+        
+       /* stage('rsyn the build from jenkins to ansible server'){
+            steps{
+                sshagent(['AnsibleServerId']) {
+                 sh '''
+                  SRC_DIR=/var/lib/jenkins/workspace/Production/CustomerPortal/springmvc/target/springmvc.war
+                  DEST_USER=rootadmin
+                  DEST_SERVER=10.2.0.5
+                  DEST_PATH=/opt/ansible
+                  rsync -avz $SRC_DIR $DEST_USER@$DEST_SERVER:$DEST_PATH'''
+               
+                }
+            }
+        }*/
+        
+       /* stage('run playbook on ansible server'){
+            steps{
+                 script {
+                    def extraVars = [
+                        ansible_job_name: env.JOB_NAME,
+                        ansible_build_id: env.BUILD_ID
+                    ]
+                
+                sshagent(['AnsibleServerId']){
+                    sh 'ssh rootadmin@10.2.05 "cd /opt/ansible/ && ansible-playbook -i inventory.ini spring-playbook.yml"'
+                     script {
+        def sshCommand = 'ssh rootadmin@10.2.0.5 "cd /opt/ansible && ls"'
+        def sshOutput = sh(script: sshCommand, returnStdout: true).trim()
+
+        echo "Contents of /opt directory on remote server:"
+        echo sshOutput
+    } 
+                }
+            }
+                
+            }
+            
+            
+            
+        }*/
+    }
+}
